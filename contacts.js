@@ -1,23 +1,54 @@
+import { nanoid } from 'nanoid';
 import * as fs from 'node:fs/promises';
-
 import * as path from 'node:path';
 
-const contactsPath = path.dirname('/db/contacts.json');
-console.log(contactsPath);
+const contactsPath = path.join('db', 'contacts.json');
 
-// TODO: задокументувати кожну функцію
-function listContacts() {
-    // ...твій код. Повертає масив контактів.
+export async function listContacts() {
+    try {
+        const data = await fs.readFile(contactsPath);
+        return JSON.parse(data);
+    } catch (error) {
+        console.log(error.message);
+    }
 }
 
-function getContactById(contactId) {
-    // ...твій код. Повертає об'єкт контакту з таким id. Повертає null, якщо контакт з таким id не знайдений.
+export async function getContactById(contactId) {
+    try {
+        const contacts = await listContacts();
+        const contact = contacts.find(contact => contact.id === contactId);
+        return contact || null;
+    } catch (error) {
+        console.log(error.message);
+    }
 }
 
-function removeContact(contactId) {
-    // ...твій код. Повертає об'єкт видаленого контакту. Повертає null, якщо контакт з таким id не знайдений.
+export async function removeContact(contactId) {
+    try {
+        const contacts = await listContacts();
+        const removedContact = contacts.find(
+            contact => contact.id === contactId
+        );
+
+        if (!removedContact) return null;
+
+        const newContacts = contacts.filter(el => el.id !== contactId);
+        await fs.writeFile(contactsPath, JSON.stringify(newContacts));
+        return removedContact;
+    } catch (error) {
+        console.log(error.message);
+    }
 }
 
-function addContact(name, email, phone) {
-    // ...твій код. Повертає об'єкт доданого контакту.
+export async function addContact(name, email, phone) {
+    try {
+        const contacts = await listContacts();
+        const newContact = { id: nanoid(), name, email, phone };
+        contacts.push(newContact);
+        await fs.writeFile(contactsPath, JSON.stringify(contacts));
+
+        return newContact;
+    } catch (error) {
+        console.log(error.message);
+    }
 }
